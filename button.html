@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push the Button Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 50px;
+            background-color: #f0f0f0;
+        }
+        #container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+        #question {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .yes-button {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .no-button {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        #counters {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="question"></div>
+        <button id="yes-button" class="button yes-button">Yes</button>
+        <button id="no-button" class="button no-button">No</button>
+        <div id="counters">
+            <p>Yes: <span id="yes-count">0</span></p>
+            <p>No: <span id="no-count">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        const goodThingsStart = [
+            "You win", "You gain", "You find", "You get", "You discover", "You inherit", "You become", "You have", "You are blessed with"
+        ];
+
+        const goodThingsEnd = [
+            "a million dollars!", "true love!", "a hidden treasure!", "a magical power!", "perfect health!", "a dream vacation!", 
+            "fame and fortune!", "a luxury car!", "a lifetime supply of chocolate!"
+        ];
+
+        const badThingsStart = [
+            "You lose", "You are cursed with", "You are haunted by", "You get stuck in", "You are followed by", "You are attacked by",
+            "You are trapped in", "You gain", "You suffer from"
+        ];
+
+        const badThingsEnd = [
+            "everything you own.", "eternal pain and suffering.", "a demon that torments you daily.", "an endless nightmare.", "a relentless assassin.", 
+            "a debilitating illness.", "a prison cell for life.", "the eternal loss of all loved ones.", "a curse that makes you age rapidly."
+        ];
+
+        let yesCount = localStorage.getItem('yesCount') ? parseInt(localStorage.getItem('yesCount')) : 0;
+        let noCount = localStorage.getItem('noCount') ? parseInt(localStorage.getItem('noCount')) : 0;
+
+        const questionElement = document.getElementById('question');
+        const yesButton = document.getElementById('yes-button');
+        const noButton = document.getElementById('no-button');
+        const yesCountElement = document.getElementById('yes-count');
+        const noCountElement = document.getElementById('no-count');
+
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function generateGoodThing() {
+            const start = getRandomElement(goodThingsStart);
+            const end = getRandomElement(goodThingsEnd);
+            return `${start} ${end}`;
+        }
+
+        function generateBadThing() {
+            const start = getRandomElement(badThingsStart);
+            const end = getRandomElement(badThingsEnd);
+            return `${start} ${end}`;
+        }
+
+        function updateQuestion() {
+            const goodThing = generateGoodThing();
+            const badThing = generateBadThing();
+            questionElement.textContent = `You get "${goodThing}" but you'll "${badThing}". Would you push the button?`;
+        }
+
+        function updateCounters() {
+            yesCountElement.textContent = yesCount;
+            noCountElement.textContent = noCount;
+            localStorage.setItem('yesCount', yesCount);
+            localStorage.setItem('noCount', noCount);
+        }
+
+        yesButton.addEventListener('click', () => {
+            yesCount++;
+            updateCounters();
+            updateQuestion();
+        });
+
+        noButton.addEventListener('click', () => {
+            noCount++;
+            updateCounters();
+            updateQuestion();
+        });
+
+        // Initialize game
+        updateQuestion();
+        updateCounters();
+    </script>
+</body>
+</html>
