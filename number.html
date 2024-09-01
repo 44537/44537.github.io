@@ -76,6 +76,19 @@
             background-color: #196619;
             border-color: #90caf9;
         }
+        .timer-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #444444;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: center;
+        }
+        .timer-box p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -92,6 +105,10 @@
         <p id="highscore">High Score: 0</p>
     </div>
 
+    <div class="timer-box">
+        <p>Time Left: <span id="timer">20</span> seconds</p>
+    </div>
+
     <div class="popup" id="resultPopup" aria-live="assertive">
         <h2 id="popupTitle"></h2>
         <p id="popupMessage"></p>
@@ -104,15 +121,20 @@
         let correctAnswer = 0;
         let lowerBound = 0;
         let upperBound = 0;
+        let timerInterval;
+        const initialTime = 20;
+        let timeLeft = initialTime;
 
         function generateQuestion() {
+            resetTimer(); // Reset the timer every time a new question is generated
+
             // Adjust probability for upper bound
             if (Math.random() < 0.5) {
                 upperBound = Math.floor(Math.random() * (1000000 - lowerBound)) + lowerBound + 1_000_000; // Upper bound above 1 million (50% chance)
             } else {
                 upperBound = Math.floor(Math.random() * (1000000 - lowerBound)) + lowerBound; // Upper bound below 1 million (50% chance)
             }
-            
+
             // Adjust lower bound probability
             if (Math.random() < 0.7) {
                 lowerBound = Math.floor(Math.random() * 11); // Lower bound between 0 and 10 (70% chance)
@@ -200,11 +222,31 @@
             } else {
                 document.querySelector('.popup button').textContent = 'Try Again';
             }
+            clearInterval(timerInterval); // Stop the timer when the popup is shown
         }
 
         function nextQuestion() {
             document.getElementById('resultPopup').style.display = 'none';
             generateQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(false); // Treat timeout as an incorrect answer
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval); // Clear any existing timer
+            timeLeft = initialTime; // Reset the time
+            document.getElementById('timer').textContent = timeLeft; // Update the display
+            startTimer(); // Start the new timer
         }
 
         // Start the first question and update score display
