@@ -3,61 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Push the Button Game</title>
+    <title>Push the Button - Dark Mode</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Orbitron', sans-serif;
             text-align: center;
-            margin: 0;
-            padding: 50px;
-            background-color: #f0f0f0;
+            background-color: #121212;
+            color: #ffffff;
         }
-        #container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: inline-block;
+        h1 {
+            margin-top: 20px;
+            font-family: 'Press Start 2P', cursive;
         }
         #question {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 20px;
+            margin: 20px 0;
         }
         .button {
-            font-size: 18px;
+            font-family: 'Orbitron', sans-serif;
             padding: 10px 20px;
-            margin: 10px;
-            border: none;
+            font-size: 18px;
+            border: 2px solid #ffffff;
             border-radius: 5px;
+            background-color: #228B22;
+            color: #ffffff;
+            margin: 10px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        .yes-button {
-            background-color: #28a745;
-            color: #fff;
-        }
-        .no-button {
-            background-color: #dc3545;
-            color: #fff;
-        }
         .button:hover {
-            opacity: 0.9;
+            background-color: #196619;
         }
-        #counters {
+        .score-box {
             margin-top: 20px;
-            font-size: 20px;
+            padding: 15px;
+            background-color: #333333;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: center;
+        }
+        .score-box p {
+            font-size: 16px;
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="question"></div>
-        <button id="yes-button" class="button yes-button">Yes</button>
-        <button id="no-button" class="button no-button">No</button>
-        <div id="counters">
-            <p>Yes: <span id="yes-count">0</span></p>
-            <p>No: <span id="no-count">0</span></p>
-        </div>
+
+    <h1>Push the Button?</h1>
+
+    <div id="question">You get "a random good thing" but you'll "a random bad thing". Would you push the button?</div>
+
+    <button id="yes-button" class="button">Yes</button>
+    <button id="no-button" class="button">No</button>
+
+    <div class="score-box">
+        <p>Yes: <span id="yes-count">0</span></p>
+        <p>No: <span id="no-count">0</span></p>
     </div>
 
     <script>
@@ -66,7 +70,7 @@
         ];
 
         const goodThingsEnd = [
-            "a million dollars!", "true love!", "a hidden treasure!", "a magical power!", "perfect health!", "a dream vacation!", 
+            "a million dollars!", "true love!", "a hidden treasure!", "a magical power!", "perfect health!", "a dream vacation!",
             "fame and fortune!", "a luxury car!", "a lifetime supply of chocolate!"
         ];
 
@@ -76,7 +80,7 @@
         ];
 
         const badThingsEnd = [
-            "everything you own.", "eternal pain and suffering.", "a demon that torments you daily.", "an endless nightmare.", "a relentless assassin.", 
+            "everything you own.", "eternal pain and suffering.", "a demon that torments you daily.", "an endless nightmare.", "a relentless assassin.",
             "a debilitating illness.", "a prison cell for life.", "the eternal loss of all loved ones.", "a curse that makes you age rapidly."
         ];
 
@@ -108,7 +112,7 @@
         function updateQuestion() {
             const goodThing = generateGoodThing();
             const badThing = generateBadThing();
-            questionElement.textContent = `You get "${goodThing}" but you'll "${badThing}". Would you push the button?`;
+            questionElement.textContent = `"${goodThing}" but "${badThing}". Would you push the button?`;
         }
 
         function updateCounters() {
@@ -134,5 +138,6 @@
         updateQuestion();
         updateCounters();
     </script>
+
 </body>
 </html>
