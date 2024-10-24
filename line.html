@@ -29,8 +29,8 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
-            display: inline-block; /* Keeps the width small initially */
-            width: auto;
+            display: inline-block; /* Makes it take minimal space */
+            width: auto; /* Keep width as small as possible initially */
         }
         input[type="file"]:hover {
             background-color: #666;
@@ -92,16 +92,12 @@
             right: 0;
         }
 
-        /* Media query for portrait mode (taller than wide) */
-        @media (orientation: portrait) {
-            input[type="file"] {
-                width: 100%; /* Make the file input span the entire width */
-            }
-        }
-
         @media (max-width: 600px) {
             h1 {
                 font-size: 8vw;
+            }
+            input[type="file"], button {
+                width: auto;
             }
             button {
                 padding: 3vw;
