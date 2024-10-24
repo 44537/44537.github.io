@@ -66,7 +66,7 @@
     <div id="output"></div>
     <div class="button-row" id="controls">
         <button id="backButton">Back</button>
-        <button id="helpButton">Line</button>
+        <button id="helpButton">Help</button>
         <button id="nextButton">Next</button>
     </div>
     <script>
@@ -79,6 +79,15 @@
 
         let lines = [];
         let currentLineIndex = -1;
+        let voices = [];
+
+        // Load available voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+        }
+
+        // Check for voice changes (this ensures voices load properly)
+        speechSynthesis.onvoiceschanged = loadVoices;
 
         fileInput.addEventListener('change', handleFileSelect);
         nextButton.addEventListener('click', goToNextLine);
@@ -121,7 +130,7 @@
                 const displayLine = cleanLine(lines[currentLineIndex]);
                 if (displayLine && !lines[currentLineIndex].startsWith('==')) {
                     displayLineOnScreen(displayLine);
-                    speak(displayLine);
+                    speak(lines[currentLineIndex], displayLine);
                     return;
                 }
             }
@@ -139,7 +148,7 @@
                 const displayLine = cleanLine(lines[currentLineIndex]);
                 if (displayLine && !lines[currentLineIndex].startsWith('==')) {
                     displayLineOnScreen(displayLine);
-                    speak(displayLine);
+                    speak(lines[currentLineIndex], displayLine);
                     return;
                 }
             }
@@ -155,16 +164,31 @@
                     }
                 }
             }
-            outputDiv.innerHTML = "<h2>No line available!</h2>";
+            outputDiv.innerHTML = "<h2>No help lines available!</h2>";
         }
 
         function displayLineOnScreen(line) {
             outputDiv.innerHTML = `<h2>${line}</h2>`;
         }
 
-        function speak(text) {
+        function speak(originalLine, text) {
             speechSynthesis.cancel();  // Cancel ongoing speech
             const utterance = new SpeechSynthesisUtterance(text);
+
+            // Choose voice based on prefix
+            if (originalLine.startsWith('++')) {
+                // Choose a male voice (if available)
+                const maleVoice = voices.find(voice => voice.name.includes('Male') || voice.gender === 'male');
+                utterance.voice = maleVoice || voices[0];  // Use male voice or default
+            } else if (originalLine.startsWith('--')) {
+                // Choose a feminine voice (if available)
+                const femaleVoice = voices.find(voice => voice.name.includes('Female') || voice.gender === 'female');
+                utterance.voice = femaleVoice || voices[0];  // Use feminine voice or default
+            } else {
+                // Use the default voice
+                utterance.voice = voices[0];
+            }
+
             utterance.pitch = 1.2;
             utterance.rate = 0.9;
             speechSynthesis.speak(utterance);
