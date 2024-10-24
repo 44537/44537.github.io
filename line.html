@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memorize Your Lines</title>
+    <title>Script Formatter & Line Reader</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,17 +26,6 @@
             border: none;
             border-radius: 5px;
         }
-        #output {
-            margin: 20px 0;
-            font-size: 24px;
-            color: #ffffff;
-        }
-        .button-row {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
         button {
             padding: 15px;
             font-size: 18px;
@@ -45,14 +34,25 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 200px;
+            display: inline-block;
         }
         button:hover {
             background-color: #666;
+        }
+        #output {
+            white-space: pre-wrap;
+            text-align: left;
+            margin-top: 20px;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
         }
         #controls {
             display: none;
@@ -61,62 +61,125 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
-    <h1>Memorize Your Lines</h1>
-    <input type="file" id="fileInput" accept=".pdf">
+    <h1>Script Formatter & Memorize Your Lines</h1>
+    <input type="file" id="fileInput" accept=".pdf"><br>
+    <button id="processButton">Process Script</button>
     <div id="output"></div>
     <div class="button-row" id="controls">
         <button id="backButton">Back</button>
         <button id="helpButton">Help</button>
         <button id="nextButton">Next</button>
     </div>
+
     <script>
         const fileInput = document.getElementById('fileInput');
+        const processButton = document.getElementById('processButton');
         const outputDiv = document.getElementById('output');
         const controls = document.getElementById('controls');
         const nextButton = document.getElementById('nextButton');
         const backButton = document.getElementById('backButton');
         const helpButton = document.getElementById('helpButton');
 
+        let characterChoices = {};
         let lines = [];
         let currentLineIndex = -1;
         let voices = [];
 
-        // Load available voices
+        processButton.addEventListener('click', handleProcessScript);
+        nextButton.addEventListener('click', goToNextLine);
+        backButton.addEventListener('click', goToPreviousLine);
+        helpButton.addEventListener('click', showHelpLine);
+        speechSynthesis.onvoiceschanged = loadVoices;
+
         function loadVoices() {
             voices = speechSynthesis.getVoices();
         }
 
-        // Check for voice changes (this ensures voices load properly)
-        speechSynthesis.onvoiceschanged = loadVoices;
+        function handleProcessScript() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload a script.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const typedArray = new Uint8Array(e.target.result);
+                pdfjsLib.getDocument(typedArray).promise.then(pdf => {
+                    return Promise.all(
+                        Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1).then(page => page.getTextContent()))
+                    );
+                }).then(textContentArray => {
+                    const fullText = textContentArray
+                        .flatMap(textContent => textContent.items.map(item => item.str))
+                        .join(' ');
+                    identifyCharacters(fullText);
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
 
-        fileInput.addEventListener('change', handleFileSelect);
-        nextButton.addEventListener('click', goToNextLine);
-        backButton.addEventListener('click', goToPreviousLine);
-        helpButton.addEventListener('click', showHelpLine);
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const typedArray = new Uint8Array(e.target.result);
-                    pdfjsLib.getDocument(typedArray).promise.then(pdf => {
-                        return Promise.all(
-                            Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1).then(page => page.getTextContent()))
-                        );
-                    }).then(textContentArray => {
-                        const fullText = textContentArray
-                            .flatMap(textContent => textContent.items.map(item => item.str))
-                            .join(' ');
-                        processLines(fullText);
-                    });
-                };
-                reader.readAsArrayBuffer(file);
+        function identifyCharacters(scriptText) {
+            const regex = /([A-Z]{2,})[,.]\s*(.+?)(?=[A-Z]{2,}[,.]\s*|$)/gs;
+            const characters = new Set();
+            let match;
+            while ((match = regex.exec(scriptText)) !== null) {
+                const speaker = match[1].trim();
+                characters.add(speaker);
+            }
+            if (characters.size > 0) {
+                displayCharacterSelection(Array.from(characters), scriptText);
+            } else {
+                alert("No characters found.");
             }
         }
 
-        function processLines(text) {
-            lines = text.split('<<').map(line => line.trim()).filter(Boolean);
+        function displayCharacterSelection(characters, scriptText) {
+            outputDiv.innerHTML = '<h2>Select Role for Each Character</h2>';
+            const form = document.createElement('form');
+            characters.forEach(character => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label>${character}:</label>
+                    <select name="${character}">
+                        <option value="masc">Masc</option>
+                        <option value="fem">Fem</option>
+                        <option value="me">Me</option>
+                    </select>
+                `;
+                form.appendChild(div);
+            });
+
+            const submitButton = document.createElement('button');
+            submitButton.textContent = 'Submit Selections';
+            submitButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                const formData = new FormData(form);
+                formData.forEach((value, key) => {
+                    characterChoices[key] = value;
+                });
+                processScriptWithSelections(scriptText);
+            });
+
+            form.appendChild(submitButton);
+            outputDiv.appendChild(form);
+        }
+
+        function processScriptWithSelections(scriptText) {
+            const processedLines = [];
+            const regex = /([A-Z]{2,})[,.]\s*(.+?)(?=[A-Z]{2,}[,.]\s*|$)/gs;
+            let match;
+            while ((match = regex.exec(scriptText)) !== null) {
+                const speaker = match[1].trim();
+                const line = match[2].trim();
+                if (characterChoices[speaker] === 'me') {
+                    processedLines.push(`== ${line}`);
+                } else if (characterChoices[speaker] === 'masc') {
+                    processedLines.push(`++ ${line}`);
+                } else if (characterChoices[speaker] === 'fem') {
+                    processedLines.push(`-- ${line}`);
+                }
+            }
+            lines = processedLines.join('\n    <<\n    ').split('<<').map(line => line.trim()).filter(Boolean);
             controls.style.display = 'flex';
             goToNextLine();
         }
@@ -143,7 +206,6 @@
                 outputDiv.innerHTML = "<h2>No previous lines!</h2>";
                 return;
             }
-
             while (--currentLineIndex >= 0) {
                 const displayLine = cleanLine(lines[currentLineIndex]);
                 if (displayLine && !lines[currentLineIndex].startsWith('==')) {
@@ -172,23 +234,17 @@
         }
 
         function speak(originalLine, text) {
-            speechSynthesis.cancel();  // Cancel ongoing speech
+            speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-
-            // Choose voice based on prefix
             if (originalLine.startsWith('++')) {
-                // Choose a male voice (if available)
                 const maleVoice = voices.find(voice => voice.name.includes('Male') || voice.gender === 'male');
-                utterance.voice = maleVoice || voices[0];  // Use male voice or default
+                utterance.voice = maleVoice || voices[0];
             } else if (originalLine.startsWith('--')) {
-                // Choose a feminine voice (if available)
                 const femaleVoice = voices.find(voice => voice.name.includes('Female') || voice.gender === 'female');
-                utterance.voice = femaleVoice || voices[0];  // Use feminine voice or default
+                utterance.voice = femaleVoice || voices[0];
             } else {
-                // Use the default voice
                 utterance.voice = voices[0];
             }
-
             utterance.pitch = 1.2;
             utterance.rate = 0.9;
             speechSynthesis.speak(utterance);
